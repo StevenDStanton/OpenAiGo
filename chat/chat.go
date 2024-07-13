@@ -1,70 +1,19 @@
 package chat
 
-type ChatModel string
-
-type ChatRole string
-
-type ResponseType string
-
-const (
-	GPT4o     ChatModel = "gpt-4o"
-	GPT4Turbo ChatModel = "gpt-4-turbo"
-	GPT4      ChatModel = "gpt-4"
-	GPT35     ChatModel = "gpt-3.5-turbo"
-
-	System    ChatRole = "system"
-	User      ChatRole = "user"
-	Assistant ChatRole = "assistant"
-	Tool      ChatRole = "tool"
-
-	Text ResponseType = "text"
-	JSON ResponseType = "json_object"
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"time"
 )
 
-type Function struct {
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
+func NewChatService(apiKey string) *Service {
+	return &Service{apiKey: apiKey}
 }
 
-type ToolCall struct {
-	ID       string   `json:"id"`
-	Type     string   `json:"type"`
-	Function Function `json:"function"`
-}
-
-type Message struct {
-	Content   string     `json:"content"`
-	Role      ChatRole   `json:"role"`
-	Name      string     `json:"name,omitempty"`
-	ToolCalls []ToolCall `json:"tool_calls,omitempty"`
-}
-
-//TODO: Implement the following optional fields.
-// - frequency_penalty
-// - logit_bias
-// - logprobs
-// - top_logprobs
-// - max_tokens
-// - n
-// - presence_penalty
-// - seed
-// - service_tier
-// - stop
-// - stream
-// - stream_options
-// - temperature
-// - top_p
-// - tools
-// - tool_choice
-// - parallel_tool_calls
-// - user
-
-type ChatRequest struct {
-	Messages []Message `json:"messages"`
-	Model    ChatModel `json:"model"`
-}
-
-func NewChatRequest(model ChatModel, messages []Message, responseType ResponseType) ChatRequest {
+func (s *Service) NewChatRequest(model ChatModel, messages []Message, responseType ResponseType) ChatRequest {
 	if responseType == JSON {
 		message := Message{
 			Role:    System,
@@ -76,4 +25,43 @@ func NewChatRequest(model ChatModel, messages []Message, responseType ResponseTy
 		Messages: messages,
 		Model:    model,
 	}
+}
+
+func (s *Service) SendChatRequest(chatRequest ChatRequest) (ChatResponse, error) {
+	requestBody, err := json.Marshal(chatRequest)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+
+	req, err := http.NewRequest("POST", "https://api.openai.com/v1/chat/completions", bytes.NewBuffer(requestBody))
+	if err != nil {
+		return ChatResponse{}, err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Timeout: 90 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return ChatResponse{}, fmt.Errorf("OpenAI API request failed with status code: %d, response body: %s", resp.StatusCode, responseBody)
+	}
+
+	var chatResponse ChatResponse
+	err = json.Unmarshal(responseBody, &chatResponse)
+	if err != nil {
+		return ChatResponse{}, err
+	}
+
+	return chatResponse, nil
+
 }

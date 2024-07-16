@@ -50,13 +50,13 @@ type ChatRequest struct {
 }
 
 type ChatResponse struct {
-	ID                string    `json:"id"`
-	Object            string    `json:"object"`
-	Created           int64     `json:"created"`
-	Model             string    `json:"model"`
-	SystemFingerprint string    `json:"system_fingerprint"`
-	Choices           []Choice  `json:"choices"`
-	Usage             Usage     `json:"usage"`
+	ID                string    `json:"id,omitempty"`
+	Object            string    `json:"object,omitempty"`
+	Created           int64     `json:"created,omitempty"`
+	Model             string    `json:"model,omitempty"`
+	SystemFingerprint string    `json:"system_fingerprint,omitempty"`
+	Choices           []Choice  `json:"choices,omitempty"`
+	Usage             Usage     `json:"usage,omitempty"`
 	Error             *APIError `json:"error,omitempty"`
 }
 

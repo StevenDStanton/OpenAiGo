@@ -54,26 +54,21 @@ func sendChatRequest(chatRequest ChatRequest, s *Service) (ChatResponse, error) 
 		return ChatResponse{}, err
 	}
 
-	// Debug statement to log the response body
-	fmt.Println("Response Body:", string(responseBody))
-
-	var chatResponse ChatResponse
-	err = json.Unmarshal(responseBody, &chatResponse)
-	if err != nil {
-		// Attempt to unmarshal as error response
-		var apiError APIError
-		if jsonErr := json.Unmarshal(responseBody, &apiError); jsonErr == nil {
-			return ChatResponse{}, fmt.Errorf("OpenAI API request failed with error: %s", apiError.Message)
-		}
-		return ChatResponse{}, fmt.Errorf("Failed to unmarshal response: %v", err)
-	}
-
 	if resp.StatusCode != http.StatusOK {
-		if chatResponse.Error != nil {
-			return ChatResponse{}, fmt.Errorf("OpenAI API request failed with status code: %d, error: %s", resp.StatusCode, chatResponse.Error.Message)
-		}
 		return ChatResponse{}, fmt.Errorf("OpenAI API request failed with status code: %d, response body: %s", resp.StatusCode, responseBody)
 	}
 
+	fmt.Println("Response Body:", string(responseBody))
+	var chatResponse ChatResponse
+	err = json.Unmarshal(responseBody, &chatResponse)
+
+	fmt.Printf("%v", chatResponse)
+	fmt.Printf("%s", chatResponse.Error.Message)
+
+	if err != nil {
+		return ChatResponse{}, err
+	}
+
 	return chatResponse, nil
+
 }

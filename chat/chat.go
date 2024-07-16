@@ -13,7 +13,7 @@ func NewChatService(apiKey string) *Service {
 	return &Service{apiKey: apiKey}
 }
 
-func (s *Service) NewChatRequest(model ChatModel, messages []Message, responseType ResponseType) ChatRequest {
+func (s *Service) NewChatRequest(model ChatModel, messages []Message, responseType ResponseType) (ChatResponse, error) {
 	if responseType == JSON {
 		message := Message{
 			Role:    System,
@@ -21,13 +21,15 @@ func (s *Service) NewChatRequest(model ChatModel, messages []Message, responseTy
 		}
 		messages = append(messages, message)
 	}
-	return ChatRequest{
+	chatRequest := ChatRequest{
 		Messages: messages,
 		Model:    model,
 	}
+	chatResponse, err := sendChatRequest(chatRequest, s)
+	return chatResponse, err
 }
 
-func (s *Service) SendChatRequest(chatRequest ChatRequest) (ChatResponse, error) {
+func sendChatRequest(chatRequest ChatRequest, s *Service) (ChatResponse, error) {
 	requestBody, err := json.Marshal(chatRequest)
 	if err != nil {
 		return ChatResponse{}, err

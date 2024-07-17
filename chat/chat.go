@@ -14,9 +14,9 @@ func NewChatService(apiKey string) *Service {
 }
 
 func (s *Service) NewChatRequest(model ChatModel, messages []Message, responseType ResponseType) (ChatResponse, error) {
-	if responseType == JSON {
+	if responseType == Type.JSON {
 		message := Message{
-			Role:    System,
+			Role:    Role.System,
 			Content: "Use Json to produce your response",
 		}
 		messages = append(messages, message)

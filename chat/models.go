@@ -2,10 +2,6 @@ package chat
 
 import "encoding/json"
 
-type ChatModel string
-type ChatRole string
-type ResponseType string
-
 type Function struct {
 	Name      string `json:"name"`
 	Arguments string `json:"arguments"`

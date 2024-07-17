@@ -54,21 +54,15 @@ func sendChatRequest(chatRequest ChatRequest, s *Service) (ChatResponse, error) 
 		return ChatResponse{}, err
 	}
 
-	// fmt.Println(resp.StatusCode)
-
-	// if resp.StatusCode != http.StatusOK {
-	// 	return ChatResponse{}, fmt.Errorf("OpenAI API request failed with status code: %d, response body: %s", resp.StatusCode, responseBody)
-	// }
-
-	fmt.Println("Response Body:", string(responseBody))
+	fmt.Println(resp.StatusCode)
 	var chatResponse ChatResponse
 	err = json.Unmarshal(responseBody, &chatResponse)
-
-	fmt.Printf("%v", chatResponse)
-	fmt.Printf("%s", chatResponse.Error.Message)
-
 	if err != nil {
 		return ChatResponse{}, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return ChatResponse{}, fmt.Errorf("openAI API request failed with status code: %d, response body: %s", resp.StatusCode, chatResponse.Error.Message)
 	}
 
 	return chatResponse, nil
